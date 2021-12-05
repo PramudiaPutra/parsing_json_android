@@ -10,9 +10,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.AsyncHttpResponseHandler
 import com.pramudiaputr.myquote.databinding.ActivityListQuoteBinding
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import cz.msebera.android.httpclient.Header
-import org.json.JSONArray
-import org.json.JSONObject
 
 class ListQuoteActivity : AppCompatActivity() {
 
@@ -56,13 +57,31 @@ class ListQuoteActivity : AppCompatActivity() {
                 Log.d(TAG, result)
 
                 try {
-                    val jsonArray = JSONArray(result)
-                    for (i in 0 until jsonArray.length()) {
-                        val jsonObject = jsonArray.getJSONObject(i)
-                        val quote = jsonObject.getString("en")
-                        val author = jsonObject.getString("author")
-                        listQuotes.add("\n$quote\n$author")
+//                    val jsonArray = JSONArray(result)
+//                    for (i in 0 until jsonArray.length()) {
+//                        val jsonObject = jsonArray.getJSONObject(i)
+//                        val quote = jsonObject.getString("en")
+//                        val author = jsonObject.getString("author")
+//                        listQuotes.add("\n$quote\n$author")
+//                    }
+
+                    val moshi = Moshi.Builder()
+                        .addLast(KotlinJsonAdapterFactory())
+                        .build()
+
+                    val listQuoteAdapter =
+                        Types.newParameterizedType(List::class.java, Response::class.java)
+                    val jsonAdapter = moshi.adapter<List<Response>>(listQuoteAdapter)
+                    val response = jsonAdapter.fromJson(result)
+
+                    response?.let {
+                        for (i in response.indices) {
+                            val quote = response[i].quote
+                            val author = response[i].author
+                            listQuotes.add("\n$quote\n$author")
+                        }
                     }
+
                     val adapter = QuoteAdapter(listQuotes)
                     binding.listQuotes.adapter = adapter
                 } catch (e: Exception) {

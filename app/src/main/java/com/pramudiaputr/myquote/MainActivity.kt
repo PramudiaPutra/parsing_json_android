@@ -9,8 +9,9 @@ import android.widget.Toast
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.AsyncHttpResponseHandler
 import com.pramudiaputr.myquote.databinding.ActivityMainBinding
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import cz.msebera.android.httpclient.Header
-import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,12 +49,24 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, result)
 
                 try {
-                    val responseObject = JSONObject(result)
-                    val quote = responseObject.getString("en")
-                    val author = responseObject.getString("author")
+//                    val responseObject = JSONObject(result)
+//                    val quote = responseObject.getString("en")
+//                    val author = responseObject.getString("author")
+                    val moshi = Moshi.Builder()
+                        .addLast(KotlinJsonAdapterFactory())
+                        .build()
 
-                    binding.tvQuote.text = quote
-                    binding.tvAuthor.text = author
+                    val jsonAdapter = moshi.adapter(Response::class.java)
+                    val response = jsonAdapter.fromJson(result)
+
+                    response?.let {
+                        val quote = it.quote
+                        val author = it.author
+
+                        binding.tvQuote.text = quote
+                        binding.tvAuthor.text = author
+                    }
+
                 } catch (e: Exception) {
                     Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
                     e.printStackTrace()
